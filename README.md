@@ -7,4 +7,4 @@ You can bind the extension to a key once installed by navigating to chrome://ext
 
 This plugin works by simply using javascript to redirect the current window to the URL you type. It doesn't view track your history or your links and there are no analytics trackers attached either.
 
-This extension is based on (Blitz fullscreen chrome extensios)[https://github.com/will-hart/blitz_fullscreen_chrome_extension]. But was improved and modified by me Joadr.
+This extension is based on [Blitz fullscreen chrome extensios](https://github.com/will-hart/blitz_fullscreen_chrome_extension). But was improved and modified by me Joadr.
