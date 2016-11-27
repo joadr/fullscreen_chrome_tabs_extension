@@ -1,0 +1,20 @@
+{
+  "name": "FullScreen Chrome Tabs",
+  "version": "0.0.1",
+  "description": "Tabs on FullScreen",
+  "homepage_url": "http://www.blitzlogger.com/blitz-chrome-url-extension.html",
+  "permissions": [
+    "tabs", "http://*/*", "https://*/*"
+  ],
+  "icons" : {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "browser_action": {
+    "default_title": "Tabs display in fullscreen mode",
+    "default_icon": "icon16.png",
+    "default_popup": "launcher.html"
+  },
+  "manifest_version": 2
+}
