@@ -155,11 +155,11 @@ function createChromeTabs () {
 // sets up the list of tabs and the event handling
 
 createChromeTabs()
-// hook up the key press
-document.body.onkeyup = handleKeypress
-
 // find the input field
 var inputField = document.getElementById('launch_url')
+
+// hook up the key press
+inputField.onkeyup = handleKeypress
 
 inputField.addEventListener('focus', function () {
   inputField.select()
