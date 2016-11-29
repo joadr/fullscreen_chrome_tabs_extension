@@ -49,7 +49,7 @@
     setupEvents () {
       window.addEventListener('resize', event => this.layoutTabs())
 
-      this.el.addEventListener('dblclick', event => this.addTab())
+      // this.el.addEventListener('dblclick', event => this.addTab())
 
       this.el.addEventListener('click', ({target}) => {
         if (target.classList.contains('chrome-tab')) {
@@ -148,10 +148,10 @@
     }
 
     setCurrentTab (tabEl) {
-      const currentTab = this.el.querySelector('.chrome-tab-current')
-      if (currentTab) currentTab.classList.remove('chrome-tab-current')
-      tabEl.classList.add('chrome-tab-current')
-      this.fixZIndexes()
+      // const currentTab = this.el.querySelector('.chrome-tab-current')
+      // if (currentTab) currentTab.classList.remove('chrome-tab-current')
+      // tabEl.classList.add('chrome-tab-current')
+      // this.fixZIndexes()
       this.emit('activeTabChange', { tabEl })
     }
 

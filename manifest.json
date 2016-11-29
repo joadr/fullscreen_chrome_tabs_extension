@@ -16,5 +16,8 @@
     "default_icon": "icon16.png",
     "default_popup": "launcher.html"
   },
+  "background": {
+    "scripts": ["background.js"]
+  },
   "manifest_version": 2
 }

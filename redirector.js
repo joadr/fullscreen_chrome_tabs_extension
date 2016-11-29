@@ -1,10 +1,4 @@
-var currentTab
-
-chrome.tabs.query({}, function (tabs) {
-  for (var i = 0; i < tabs.length; i++) {
-    chrome.tabs.executeScript(tabs[i].id, {file: 'mouse-tracker.js'})
-  }
-})
+// var currentTab
 
 // does some very basic manipulation of the url in the input box
 // from version 1.2.4 keeps backwards compatibility but replicates omnibox search functionality
@@ -31,17 +25,10 @@ function getLocation () {
 function handleKeypress (e) {
   var key = e.keyCode ? e.keyCode : e.charCode
   if (key === 13 && !e.shiftKey) {
-    chrome.windows.getCurrent(function (w) {
-      chrome.tabs.getSelected(w.id, function (tab) {
-        chrome.tabs.update(tab.id, { 'url': getLocation() })
-        window.close()
-      })
-    })
+    port.postMessage({updateTab: { 'url': getLocation() }})
   } else if (key === 13) {
-    // create a new tab - since 1.2.3
-    chrome.tabs.create({
-      'url': getLocation()
-    })
+    // port.postMessage({createTab: getLocation()})
+    port.postMessage({updateTab: { 'url': getLocation() }})
   } else {
     return true
   }
@@ -54,91 +41,92 @@ function redirectToTab (e, t) {
 
   // check if ctrl key is held - this closes the clicked tab (since 1.2.3)
   if (e.ctrlKey) {
-    chrome.tabs.remove(tabid)
+    port.postMessage({deleteTab: tabid})
     if (this.parentNode) {
       this.parentNode.removeChild(this)
     }
   } else {
     // select the requested tab
-    chrome.tabs.update(tabid, {'active': true})
+    port.postMessage({updateTab: tabid, modifier: {'active': true}})
+    initializeTabs()
   }
 }
 
 function closeTab (e, t) {
   var tabid = parseInt(this.parentElement.dataset.id)
-  chrome.tabs.remove(tabid)
+  port.postMessage({deleteTab: tabid})
 }
 
 // lists the tabs in the ul
-function doListTabs (w) {
-  // list the tabs in the ul
-  chrome.tabs.query({'windowId': w.id}, function (tabs) {
-    var tablist = document.getElementsByClassName('chrome-tabs-content')[0]
+function doListTabs (chromeTabs) {
+  var tablist = document.getElementsByClassName('chrome-tabs-content')[0]
 
-    // remove old elements
-    tablist.innerHTML = ''
+  // remove old elements
+  tablist.innerHTML = ''
 
-    tabs.forEach(function (tab) {
-      console.log(tab)
-      // new
-      // Divs structure
-      var tabDiv = document.createElement('div')
-      var tabBackground = document.createElement('div')
-      var tabFavicon = document.createElement('div')
-      var tabTitle = document.createElement('div')
-      var tabClose = document.createElement('div')
+  chromeTabs.forEach(function (tab) {
+    // new
+    // Divs structure
+    var tabDiv = document.createElement('div')
+    var tabBackground = document.createElement('div')
+    var tabFavicon = document.createElement('div')
+    var tabTitle = document.createElement('div')
+    var tabClose = document.createElement('div')
 
-      // Give identifier to each tab and add class
-      tabDiv.setAttribute('data-id', tab.id)
-      tabDiv.setAttribute('class', 'chrome-tab')
-      if (tab.pinned) {
-        // tabDiv.setAttribute('class', 'chrome-tab pinned')
-      }
-      // Create tab Title
-      // if (!tab.pinned) {
-        tabTitle.appendChild(document.createTextNode(tab.title))
-        tabTitle.setAttribute('class', 'chrome-tab-title')
-      // }
+    // Give identifier to each tab and add class
+    tabDiv.setAttribute('data-id', tab.id)
+    tabDiv.setAttribute('class', 'chrome-tab')
+    if (tab.pinned) {
+      // tabDiv.setAttribute('class', 'chrome-tab pinned')
+    }
+    // Create tab Title
+    // if (!tab.pinned) {
+      tabTitle.appendChild(document.createTextNode(tab.title))
+      tabTitle.setAttribute('class', 'chrome-tab-title')
+    // }
 
-      // create tab Background
-      tabBackground.innerHTML = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><symbol id="topleft" viewBox="0 0 214 29" ><path d="M14.3 0.1L214 0.1 214 29 0 29C0 29 12.2 2.6 13.2 1.1 14.3-0.4 14.3 0.1 14.3 0.1Z"/></symbol><symbol id="topright" viewBox="0 0 214 29"><use xlink:href="#topleft"/></symbol><clipPath id="crop"><rect class="mask" width="100%" height="100%" x="0"/></clipPath></defs><svg width="50%" height="100%" transfrom="scale(-1, 1)"><use xlink:href="#topleft" width="214" height="29" class="chrome-tab-background"/><use xlink:href="#topleft" width="214" height="29" class="chrome-tab-shadow"/></svg><g transform="scale(-1, 1)"><svg width="50%" height="100%" x="-100%" y="0"><use xlink:href="#topright" width="214" height="29" class="chrome-tab-background"/><use xlink:href="#topright" width="214" height="29" class="chrome-tab-shadow"/></svg></g></svg>'
-      tabBackground.setAttribute('class', 'chrome-tab-background')
+    // create tab Background
+    tabBackground.innerHTML = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><symbol id="topleft" viewBox="0 0 214 29" ><path d="M14.3 0.1L214 0.1 214 29 0 29C0 29 12.2 2.6 13.2 1.1 14.3-0.4 14.3 0.1 14.3 0.1Z"/></symbol><symbol id="topright" viewBox="0 0 214 29"><use xlink:href="#topleft"/></symbol><clipPath id="crop"><rect class="mask" width="100%" height="100%" x="0"/></clipPath></defs><svg width="50%" height="100%" transfrom="scale(-1, 1)"><use xlink:href="#topleft" width="214" height="29" class="chrome-tab-background"/><use xlink:href="#topleft" width="214" height="29" class="chrome-tab-shadow"/></svg><g transform="scale(-1, 1)"><svg width="50%" height="100%" x="-100%" y="0"><use xlink:href="#topright" width="214" height="29" class="chrome-tab-background"/><use xlink:href="#topright" width="214" height="29" class="chrome-tab-shadow"/></svg></g></svg>'
+    tabBackground.setAttribute('class', 'chrome-tab-background')
 
-      // Add classes to favicon and close
-      tabFavicon.setAttribute('class', 'chrome-tab-favicon')
+    // Add classes to favicon and close
+    tabFavicon.setAttribute('class', 'chrome-tab-favicon')
+    if (tab.favIconUrl) {
       tabFavicon.setAttribute('style', 'background-image: url(' + tab.favIconUrl + ')')
-      tabClose.setAttribute('class', 'chrome-tab-close')
+    } else {
+      tabFavicon.setAttribute('style', 'background-image: url(https://raw.githubusercontent.com/adamschwartz/chrome-tabs/gh-pages/demo/images/default-favicon.png)')
+    }
+    tabClose.setAttribute('class', 'chrome-tab-close')
 
-      // Append structure
-      tabDiv.appendChild(tabBackground)
-      tabDiv.appendChild(tabFavicon)
-      // if (!tab.pinned) {
-        tabDiv.appendChild(tabTitle)
-        tabDiv.appendChild(tabClose)
-      // }
+    // Append structure
+    tabDiv.appendChild(tabBackground)
+    tabDiv.appendChild(tabFavicon)
+    // if (!tab.pinned) { // No pinned support yet
+      tabDiv.appendChild(tabTitle)
+      tabDiv.appendChild(tabClose)
+    // }
 
-      // Add event listener to click
-      tabDiv.addEventListener('click', redirectToTab)
-      tabClose.addEventListener('click', closeTab)
+    // Add event listener to click
+    tabDiv.addEventListener('click', redirectToTab)
+    tabClose.addEventListener('click', closeTab)
 
-      // attach tab to tablist
-      if (tab.id === currentTab) {
-        tabDiv.setAttribute('class', 'chrome-tab chrome-tab-current')
-      }
+    // attach tab to tablist
+    if (tab.id === currentTab) {
+      tabDiv.setAttribute('class', 'chrome-tab chrome-tab-current')
+    }
 
-      tablist.appendChild(tabDiv)
-    })
-
-    // resize the popup to fit the list
-    // var html = document.getElementsByTagName('html')[0]
-    // var height = document.getElementsByTagName('ul')[0].clientHeight +
-    //   document.getElementById('launch_url').clientHeight + 10
-    // html.style.height = height + 'px'
+    tablist.appendChild(tabDiv)
   })
+
   initializeTabs()
 }
 
-function createRemoteTabs () {
+function createChromeTabs () {
+  var previousChromeTabs = document.getElementsByClassName('chrome-tabs')[0]
+  if (previousChromeTabs) {
+    previousChromeTabs.parentNode.removeChild(previousChromeTabs)
+  }
+
   var tabs = document.createElement('div')
   var content = document.createElement('div')
   var bottomBar = document.createElement('div')
@@ -165,22 +153,29 @@ function createRemoteTabs () {
 }
 
 // sets up the list of tabs and the event handling
-document.addEventListener('DOMContentLoaded', function () {
-  createRemoteTabs()
-  // hook up the key press
-  document.body.onkeyup = handleKeypress
 
-  // find the input field
-  var inputField = document.getElementById('launch_url')
+createChromeTabs()
+// hook up the key press
+document.body.onkeyup = handleKeypress
 
-  // put the current url in there and select it
-  chrome.windows.getCurrent(function (w) {
-    chrome.tabs.getSelected(w.id, function (tab) {
-      currentTab = tab.id
-      inputField.value = tab.url
-      inputField.focus()
-      inputField.select()
+// find the input field
+var inputField = document.getElementById('launch_url')
+
+inputField.addEventListener('focus', function () {
+  inputField.select()
+})
+
+var port = chrome.runtime.connect({name: 'tabInfo'})
+port.postMessage({instruction: 'give me tabs'})
+port.onMessage.addListener(function (msg) {
+  if (msg.chromeTabs) {
+    msg.chromeTabs.forEach(function (tab) {
+      if (currentTab === tab.id) {
+        inputField.value = tab.url
+        // inputField.focus()
+        // inputField.select()
+      }
     })
-    doListTabs(w)
-  })
+    doListTabs(msg.chromeTabs)
+  }
 })
